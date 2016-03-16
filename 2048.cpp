@@ -7,6 +7,8 @@
 #include <time.h>
 #include <algorithm>
 
+#include <fstream>
+
 #include "2048.h"
 
 #include "config.h"
@@ -29,6 +31,8 @@
 #if defined(min)
 #undef min
 #endif
+
+std::string stats_output;
 
 // Transpose rows/columns in a board:
 //   0123       048c
@@ -519,11 +523,51 @@ void play_game(get_move_func_t get_move) {
         board = insert_tile_rand(newboard, tile);
     }
 
+    std::ofstream statfile(stats_output.c_str(),std::ios::out | std::ios::app);
+    int fin_score = score_board(board) - scorepenalty;
+    if (!statfile.bad())
+    {
+      statfile << "score: ";
+      statfile << fin_score;
+      statfile << "\n";
+      statfile << "moves: ";
+      statfile << moveno;
+      statfile << "\n";
+      statfile << "highest_tile: ";
+      statfile << get_max_rank(board);
+      statfile << "\n";
+      statfile << "board:\n";
+      int temp_tile;
+      board_t temp_board = board;
+      int board_i,board_j;
+      for(board_i=0; board_i<4; board_i++) {
+          for(board_j=0; board_j<4; board_j++) {
+              uint8_t powerVal = (temp_board) & 0xf;
+              temp_tile = (powerVal == 0) ? 0 : 1 << powerVal;
+              statfile << temp_tile;
+              statfile << " ";
+              temp_board >>= 4;
+          }
+          statfile << "\n";
+      }
+      statfile << "\n";
+      statfile.close();
+    }
+
     print_board(board);
+
+
+
     printf("\nGame over. Your score is %.0f. The highest rank you achieved was %d.\n", score_board(board) - scorepenalty, get_max_rank(board));
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+  if(argc == 2){
+    stats_output=argv[1];
+  } else {
+    stats_output="stats.txt";
+  }
     init_tables();
     play_game(find_best_move);
 }
