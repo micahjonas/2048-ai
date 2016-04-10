@@ -394,7 +394,8 @@ float score_toplevel_move(board_t board, int move) {
     struct timeval start, finish;
     double elapsed;
     eval_state state;
-    state.depth_limit = std::max(3, count_distinct_tiles(board) - 2);
+    int tempLimit = std::max(3, count_distinct_tiles(board) - 2);
+    state.depth_limit = std::min(6, tempLimit);
 
     gettimeofday(&start, NULL);
     res = _score_toplevel_move(state, board, move);
